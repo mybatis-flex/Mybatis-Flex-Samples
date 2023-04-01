@@ -15,11 +15,10 @@
         <mybatis-flex.version>1.0.5</mybatis-flex.version>
         <mysql.version>8.0.27</mysql.version>
 
-         <spring.version>5.3.25</spring.version>
+        <spring.version>5.3.25</spring.version>
         <spring-boot.version>2.7.9</spring-boot.version>
         <slf4j.version>1.7.13</slf4j.version>
         <HikariCP.version>4.0.3</HikariCP.version>
-
 
         <junit.version>4.13.2</junit.version>
     </properties>
@@ -81,8 +80,6 @@
             <artifactId>spring-test</artifactId>
             <version>${spring.version}</version>
         </dependency>
-
-
 
 
         <!--for log start-->
