@@ -11,7 +11,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
 
-        <mybatis-flex.version>1.1.1</mybatis-flex.version>
+        <mybatis-flex.version>1.1.3</mybatis-flex.version>
         <mysql.version>8.0.27</mysql.version>
 
         <spring.version>6.0.7</spring.version>
@@ -30,7 +30,23 @@
             <groupId>com.mybatis-flex</groupId>
             <artifactId>mybatis-flex-spring-boot-starter</artifactId>
             <version>${mybatis-flex.version}</version>
+
+            <!--排除 mybatis-spring 版本-->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.mybatis</groupId>
+                    <artifactId>mybatis-spring</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+
+        <!-- 添加已适配 springboot 3 的 mybatis-spring 依赖-->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-spring</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+
 
         <dependency>
             <groupId>mysql</groupId>
