@@ -34,7 +34,7 @@ import javax.sql.DataSource;
 
 @Configuration
 @MapperScan("com.mybatisflex.test.mapper")
-public class AppConfig implements ApplicationListener<ContextRefreshedEvent> {
+public class AppConfig {
 
     @Bean
     public DataSource dataSource() {
@@ -51,20 +51,5 @@ public class AppConfig implements ApplicationListener<ContextRefreshedEvent> {
         SqlSessionFactoryBean factoryBean = new FlexSqlSessionFactoryBean();
         factoryBean.setDataSource(dataSource);
         return factoryBean.getObject();
-    }
-
-    @EventListener(classes = {ContextStartedEvent.class})
-    public void handleContextStartedEvent() {
-        System.out.println(">>>>>> handleContextStartedEvent listener invoked!");
-
-        // 为 Db 设置默认的 SqlSession
-        Db.invoker().setRowSessionManager(new SpringRowSessionManager());
-    }
-
-    @Override
-    public void onApplicationEvent(ContextRefreshedEvent event) {
-        System.out.println(">>>>>> onApplicationEvent");
-        // 为 Db 设置默认的 SqlSession
-        Db.invoker().setRowSessionManager(new SpringRowSessionManager());
     }
 }

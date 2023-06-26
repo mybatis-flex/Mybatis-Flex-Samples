@@ -15,13 +15,10 @@
  */
 package com.mybatisflex.test;
 
-import com.mybatisflex.annotation.Id;
 import com.mybatisflex.core.MybatisFlexBootstrap;
 import com.mybatisflex.core.row.Db;
 import com.mybatisflex.core.row.Row;
 import com.mybatisflex.core.row.RowKey;
-import com.mybatisflex.core.row.RowMapper;
-import org.apache.ibatis.logging.stdout.StdOutImpl;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
@@ -48,7 +45,7 @@ public class DbRowSample {
 
 
         //新增一条数据，自增
-        Row newRow = Row.ofKey(RowKey.ID_AUTO) // id 自增
+        Row newRow = Row.ofKey(RowKey.AUTO) // id 自增
                 .set("user_name", "lisi")
                 .set("age", 22)
                 .set("birthday", new Date());

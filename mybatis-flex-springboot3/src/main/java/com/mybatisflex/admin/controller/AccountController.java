@@ -17,21 +17,34 @@ package com.mybatisflex.admin.controller;
 
 import com.mybatisflex.admin.mapper.AccountMapper;
 import com.mybatisflex.admin.model.Account;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.Resource;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
 public class AccountController {
 
-    @Autowired
+    @Resource
     private AccountMapper accountMapper;
 
 
     @GetMapping("/")
     List<Account> index() {
         return accountMapper.selectAll();
+    }
+
+
+    @GetMapping("/save")
+    @Transactional(rollbackFor = Exception.class)
+    public void save() {
+        Account account2 = new Account();
+        account2.setUserName("用户");
+        account2.setAge(1);
+        account2.setBirthday(new Date());
+        accountMapper.insert(account2);
     }
 }
