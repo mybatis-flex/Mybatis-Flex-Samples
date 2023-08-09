@@ -1,0 +1,5 @@
+embedded:
+  containers:
+    enabled: true
+  mysql:
+    init-script-path: init.sql

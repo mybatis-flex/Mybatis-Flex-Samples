@@ -1,0 +1,184 @@
+name: JUnit and Coverage Report # action 的名称
+
+on: # 什么时候触发 action
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+permissions: write-all
+
+jobs:
+  build: # 单元测试
+    runs-on: ubuntu-latest
+    steps: # 步骤
+      - name: "拉取仓库代码"
+        uses: actions/checkout@v3
+      - name: "查看代码目录"
+        run: |
+          pwd && ls -lah
+      - name: "设置JDK环境"
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: maven # 缓存依赖项
+      - name: "安装Node.js环境"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: "安装Maven环境"
+        uses: stCarolas/setup-maven@v4.5
+        with:
+          maven-version: 3.8.2
+      - name: "输出JDK、Maven和Node.js的版本"
+        run: |
+          mvn -v
+          node -v
+          java -version
+      - name: "设置Maven本地仓库"
+        uses: skjolber/maven-cache-github-action@v2.0
+        with:
+          step: restore
+      - name: "Maven编译"
+        run: |
+          cd mybatis-flex-mysql8-springboot2
+          mvn clean install -Dmaven.test.skip=false --batch-mode --update-snapshots verify
+        env:
+          TEST_JUNIT_PATH: ./target/surefire-reports/TEST-*.xml
+          TEST_JACOCO_PATH: ./target/site/jacoco/jacoco.xml
+      - name: "将依赖jar缓存到Maven本地仓库"
+        uses: skjolber/maven-cache-github-action@v2.0
+        with:
+          step: save
+      - name: "单元测试报告"
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
+        with:
+          files: |
+            ${{ github.workspace }}/**/TEST-*.xml
+  notice_success: # 成功的通知
+    needs: build
+    if: ${{ !cancelled() && (success() || needs.build.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: "成功的通知"
+        if: ${{ contains(needs.*.result, 'success') }}
+        run: |
+          echo "开源项目：${{ github.repository }}"
+          echo "构建状态：单元测试构建失败"
+          echo "工作流地址：https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  #      - name: "成功的通知（邮件通知）"
+  #        if: ${{ contains(needs.*.result, 'success') }}
+  #        uses: dawidd6/action-send-mail@v3
+  #        env:
+  #          MAIL_SMTP_SSL: ${{ secrets.MAIL_SMTP_SSL || false }}
+  #          MAIL_SMTP_PORT: ${{ secrets.MAIL_SMTP_PORT || 25 }}
+  #          MAIL_AUTH_CODE: ${{secrets.MAIL_PASSWORD}}
+  #        with:
+  #          server_address: ${{secrets.MAIL_SMTP_ADDRESS}} # SMTP服务器
+  #          server_port: $MAIL_SMTP_PORT # SMTP 端口号，默认 25
+  #          secure: $MAIL_SMTP_SSL # ssl
+  #          username: ${{secrets.MAIL_USERNAME}} # 账号
+  #          password: ${{secrets.MAIL_PASSWORD}} # 密码
+  #          subject: "${{ github.repository }}构建的状态" # 主题
+  #          to: ${{ github.event.head_commit.committer.email }},${{secrets.MAIL_USERNAME}} # 发送给谁
+  #          from: ${{secrets.MAIL_USERNAME}} # 谁发送
+  #          # cc: kyloren@example.com,leia@example.com # 可选的抄送收件人
+  #          # bcc: r2d2@example.com,hansolo@example.com # 可选的副本收件人
+  #          # reply_to: luke@example.com # 电子邮件回复的可选收件人
+  #          # in_reply_to: <random-luke@example.com> 可选消息ID此消息正在回复
+  #          # body: |
+  #          # 内容
+  #          # [单元测试构建失败，点击查看](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}})
+  #          # 带有 html 格式的文本
+  #          html_body: |
+  #            开源项目：${{ github.repository }} <br>
+  #            构建状态：单元测试构建成功啦😆 <br>
+  #            工作流地址：https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  #          convert_markdown: true # 转换 markdown
+  #          ignore_cert: true # 是否忽略证书
+  #          # attachments: attachments.zip,git.diff,./dist/static/*.js 附件
+  #          priority: normal # 优先级，'high', 'normal' (default) or 'low'
+  notice_failure: # 失败的通知
+    needs: build
+    if: ${{ !cancelled() && (failure() || needs.build.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: "失败的通知（创建issue）"
+        if: ${{ contains(needs.*.result, 'failure') }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // 仓库的所有者
+            const owner = context.payload.repository.owner.login;
+            // 仓库
+            const repo = context.payload.repository.name;
+            // 提交的 sha
+            const commit = context.sha;
+            // 工作流
+            const workflow = context.workflow;
+            // 触发者
+            const actor = context.actor;
+            // 推送者的邮箱
+            const pusherEmail = context.payload.pusher?.email
+            // 推送者的姓名
+            const pusherName = context.payload.pusher?.name
+            // 工作流地址
+            const workflowRunId = context.runId;
+            const workflowURL = `https://github.com/${owner}/${repo}/actions/runs/${workflowRunId}`;
+            console.log('workflowURL',workflowURL)
+            // 拼接提示消息~
+            const message = `
+              [单元测试构建失败，点击查看](${workflowURL})
+              提交: ${commit}
+              工作流: ${workflow}
+              触发者: ${actor}
+              提交者：${pusherName}
+            `
+            // 设置 issues
+            const result = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '单元测试构建失败',
+              body: message,
+              labels: ['bug','question','help wanted']
+            });
+            
+            console.log("context ==> "+ context)
+            console.log("context ==> "+ JSON.stringify(context))
+
+#      - name: "失败的通知（邮件通知）"
+#        if: ${{ contains(needs.*.result, 'failure') }}
+#        uses: dawidd6/action-send-mail@v3
+#        env:
+#          MAIL_SMTP_SSL: ${{ secrets.MAIL_SMTP_SSL || false }}
+#          MAIL_SMTP_PORT: ${{ secrets.MAIL_SMTP_PORT || 25 }}
+#          MAIL_AUTH_CODE: ${{secrets.MAIL_PASSWORD}}
+#        with:
+#          server_address: ${{secrets.MAIL_SMTP_ADDRESS}} # SMTP服务器
+#          server_port: $MAIL_SMTP_PORT # SMTP 端口号，默认 25
+#          secure: $MAIL_SMTP_SSL # ssl
+#          username: ${{secrets.MAIL_USERNAME}} # 账号
+#          password: ${{secrets.MAIL_PASSWORD}} # 密码
+#          subject: "${{ github.repository }}构建的状态" # 主题
+#          to: ${{ github.event.head_commit.committer.email }},${{secrets.MAIL_USERNAME}} # 发送给谁
+#          from: ${{secrets.MAIL_USERNAME}} # 谁发送
+#          # cc: kyloren@example.com,leia@example.com # 可选的抄送收件人
+#          # bcc: r2d2@example.com,hansolo@example.com # 可选的副本收件人
+#          # reply_to: luke@example.com # 电子邮件回复的可选收件人
+#          # in_reply_to: <random-luke@example.com> 可选消息ID此消息正在回复
+#          # body: |
+#          # 内容
+#          # [单元测试构建失败，点击查看](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}})
+#          # 带有 html 格式的文本
+#          html_body: |
+#            开源项目：${{ github.repository }} <br>
+#            构建状态：单元测试构建失败😂 <br>
+#            工作流地址：https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+#          convert_markdown: true # 转换 markdown
+#          ignore_cert: true # 是否忽略证书
+#          # attachments: attachments.zip,git.diff,./dist/static/*.js 附件
+#          priority: normal # 优先级，'high', 'normal' (default) or 'low'
+
+

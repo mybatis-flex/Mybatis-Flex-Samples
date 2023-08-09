@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${embedded.mysql.host}:${embedded.mysql.port}/${embedded.mysql.schema}
+    username: ${embedded.mysql.user}
+    password: ${embedded.mysql.password}
+  #  jpa:
+  #    database: MySQL
+  #    database-platform: org.hibernate.dialect.MySQL8Dialect
+  #    show-sql: true
+  #    hibernate:
+  #      ddl-auto: update
+  #    properties:
+  #      hibernate:
+  #        show_sql: true
+  #        format_sql: true
+  #        use_sql_comments: true
+  cloud:
+    compatibility-verifier:
+      enabled: false
+#logging:
+#  level:
+#    org:
+#      hibernate:
+#        type:
+#          descriptor:
+#            sql:
+#              org.hibernate.type.descriptor.sql.BasicBinder: trace
+#        SQL: debug
