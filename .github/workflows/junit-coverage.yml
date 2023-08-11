@@ -12,6 +12,9 @@ permissions: write-all
 jobs:
   build: # 单元测试
     runs-on: ubuntu-latest
+    env:
+      TEST_JUNIT_PATH: ${{ github.workspace }}/**/TEST-*.xml
+      TEST_JACOCO_PATH: ${{ github.workspace }}/**/jacoco.xml
     steps: # 步骤
       - name: "拉取仓库代码"
         uses: actions/checkout@v3
@@ -38,6 +41,7 @@ jobs:
           node -v
           java -version
       - name: "设置Maven本地仓库"
+        if: always()
         uses: skjolber/maven-cache-github-action@v2.0
         with:
           step: restore
@@ -45,18 +49,31 @@ jobs:
         run: |
           cd mybatis-flex-mysql8-springboot2
           mvn clean install -Dmaven.test.skip=false --batch-mode --update-snapshots verify
-        env:
-          TEST_JUNIT_PATH: ./target/surefire-reports/TEST-*.xml
-          TEST_JACOCO_PATH: ./target/site/jacoco/jacoco.xml
+      - name: "将指定的单元测试文件进行压缩"
+        if: always()
+        run: |
+          # 根据指定的规则查找文件
+          xml_files=$(find "${{ github.workspace }}" -type f -name 'TEST-*.xml')
+          # 创建临时目录用来存储这些文件
+          tmp_dir=$(mktemp -d)
+          for file in $xml_files; do
+            cp "$file" "$tmp_dir"
+          done
+          # 打包
+          tar -cvf archive.tar.gz -C "$tmp_dir" .
+          # 删除临时目录
+          rm -rf "$tmp_dir"
+      - name: "上传archive.tar.gz压缩文件"
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: archive
+          path: archive.tar.gz
       - name: "将依赖jar缓存到Maven本地仓库"
+        if: always()
         uses: skjolber/maven-cache-github-action@v2.0
         with:
           step: save
-      - name: "单元测试报告"
-        uses: EnricoMi/publish-unit-test-result-action/composite@v2
-        with:
-          files: |
-            ${{ github.workspace }}/**/TEST-*.xml
   notice_success: # 成功的通知
     needs: build
     if: ${{ !cancelled() && (success() || needs.build.result == 'skipped') }}
@@ -66,40 +83,8 @@ jobs:
         if: ${{ contains(needs.*.result, 'success') }}
         run: |
           echo "开源项目：${{ github.repository }}"
-          echo "构建状态：单元测试构建失败"
+          echo "构建状态：单元测试构建成功"
           echo "工作流地址：https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  #      - name: "成功的通知（邮件通知）"
-  #        if: ${{ contains(needs.*.result, 'success') }}
-  #        uses: dawidd6/action-send-mail@v3
-  #        env:
-  #          MAIL_SMTP_SSL: ${{ secrets.MAIL_SMTP_SSL || false }}
-  #          MAIL_SMTP_PORT: ${{ secrets.MAIL_SMTP_PORT || 25 }}
-  #          MAIL_AUTH_CODE: ${{secrets.MAIL_PASSWORD}}
-  #        with:
-  #          server_address: ${{secrets.MAIL_SMTP_ADDRESS}} # SMTP服务器
-  #          server_port: $MAIL_SMTP_PORT # SMTP 端口号，默认 25
-  #          secure: $MAIL_SMTP_SSL # ssl
-  #          username: ${{secrets.MAIL_USERNAME}} # 账号
-  #          password: ${{secrets.MAIL_PASSWORD}} # 密码
-  #          subject: "${{ github.repository }}构建的状态" # 主题
-  #          to: ${{ github.event.head_commit.committer.email }},${{secrets.MAIL_USERNAME}} # 发送给谁
-  #          from: ${{secrets.MAIL_USERNAME}} # 谁发送
-  #          # cc: kyloren@example.com,leia@example.com # 可选的抄送收件人
-  #          # bcc: r2d2@example.com,hansolo@example.com # 可选的副本收件人
-  #          # reply_to: luke@example.com # 电子邮件回复的可选收件人
-  #          # in_reply_to: <random-luke@example.com> 可选消息ID此消息正在回复
-  #          # body: |
-  #          # 内容
-  #          # [单元测试构建失败，点击查看](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}})
-  #          # 带有 html 格式的文本
-  #          html_body: |
-  #            开源项目：${{ github.repository }} <br>
-  #            构建状态：单元测试构建成功啦😆 <br>
-  #            工作流地址：https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-  #          convert_markdown: true # 转换 markdown
-  #          ignore_cert: true # 是否忽略证书
-  #          # attachments: attachments.zip,git.diff,./dist/static/*.js 附件
-  #          priority: normal # 优先级，'high', 'normal' (default) or 'low'
   notice_failure: # 失败的通知
     needs: build
     if: ${{ !cancelled() && (failure() || needs.build.result == 'skipped') }}
@@ -147,38 +132,22 @@ jobs:
             
             console.log("context ==> "+ context)
             console.log("context ==> "+ JSON.stringify(context))
-
-#      - name: "失败的通知（邮件通知）"
-#        if: ${{ contains(needs.*.result, 'failure') }}
-#        uses: dawidd6/action-send-mail@v3
-#        env:
-#          MAIL_SMTP_SSL: ${{ secrets.MAIL_SMTP_SSL || false }}
-#          MAIL_SMTP_PORT: ${{ secrets.MAIL_SMTP_PORT || 25 }}
-#          MAIL_AUTH_CODE: ${{secrets.MAIL_PASSWORD}}
-#        with:
-#          server_address: ${{secrets.MAIL_SMTP_ADDRESS}} # SMTP服务器
-#          server_port: $MAIL_SMTP_PORT # SMTP 端口号，默认 25
-#          secure: $MAIL_SMTP_SSL # ssl
-#          username: ${{secrets.MAIL_USERNAME}} # 账号
-#          password: ${{secrets.MAIL_PASSWORD}} # 密码
-#          subject: "${{ github.repository }}构建的状态" # 主题
-#          to: ${{ github.event.head_commit.committer.email }},${{secrets.MAIL_USERNAME}} # 发送给谁
-#          from: ${{secrets.MAIL_USERNAME}} # 谁发送
-#          # cc: kyloren@example.com,leia@example.com # 可选的抄送收件人
-#          # bcc: r2d2@example.com,hansolo@example.com # 可选的副本收件人
-#          # reply_to: luke@example.com # 电子邮件回复的可选收件人
-#          # in_reply_to: <random-luke@example.com> 可选消息ID此消息正在回复
-#          # body: |
-#          # 内容
-#          # [单元测试构建失败，点击查看](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}})
-#          # 带有 html 格式的文本
-#          html_body: |
-#            开源项目：${{ github.repository }} <br>
-#            构建状态：单元测试构建失败😂 <br>
-#            工作流地址：https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-#          convert_markdown: true # 转换 markdown
-#          ignore_cert: true # 是否忽略证书
-#          # attachments: attachments.zip,git.diff,./dist/static/*.js 附件
-#          priority: normal # 优先级，'high', 'normal' (default) or 'low'
-
-
+  junit-coverage: # 单元测试覆盖率
+    needs: build
+    if: ${{ !cancelled() && (failure() || success() || needs.build.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: "下载archive.tar.gz压缩文件"
+        uses: actions/download-artifact@v3
+        with:
+          name: archive
+      - name: "解压archive.tar.gz压缩文件"
+        run: |
+          ls -lah .
+          tar -xvf archive.tar.gz
+          ls -lah .
+      - name: "生成单元测试报告"
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
+        with:
+          files: |
+            TEST-*.xml

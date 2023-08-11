@@ -13,6 +13,8 @@ public class MyBatisFlexConfiguration {
         AuditManager.setAuditEnable(true);
 
         // 设置 SQL 审计收集器
-        AuditManager.setMessageCollector(auditMessage -> log.info("{},{}ms", auditMessage.getFullSql(), auditMessage.getElapsedTime()));
+        AuditManager.setMessageCollector(
+                auditMessage -> log.info("{},{}ms",
+                        auditMessage.getFullSql(), auditMessage.getElapsedTime()));
     }
 }
