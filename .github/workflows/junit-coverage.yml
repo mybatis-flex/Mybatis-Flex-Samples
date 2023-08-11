@@ -48,7 +48,7 @@ jobs:
       - name: "Maven编译"
         run: |
           cd mybatis-flex-mysql8-springboot2
-          mvn clean install -Dmaven.test.skip=false --batch-mode --update-snapshots verify
+          mvn clean install -Dmaven.test.skip=false -Ptest --batch-mode --update-snapshots verify
       - name: "将指定的单元测试文件进行压缩"
         if: always()
         run: |
