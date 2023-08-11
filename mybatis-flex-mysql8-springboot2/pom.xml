@@ -177,9 +177,13 @@
                     </snapshots>
                 </pluginRepository>
             </pluginRepositories>
+            <!-- 设置默认启动 -->
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
         </profile>
         <profile>
-            <id>test</id>
+            <id>github</id>
             <repositories>
                 <repository>
                     <id>central</id>
