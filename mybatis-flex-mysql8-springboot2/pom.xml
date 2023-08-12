@@ -17,8 +17,12 @@
     <description>mybatis-flex-mysql8-springboot2</description>
 
     <properties>
-        <java.version>1.8</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <java.version>17</java.version>
         <mybatis-flex.version>1.5.7</mybatis-flex.version>
+        <spring-cloud.version>3.0.5</spring-cloud.version>
+        <embedded-mysql.version>2.3.2</embedded-mysql.version>
     </properties>
     <dependencies>
         <dependency>
@@ -53,17 +57,17 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-bootstrap</artifactId>
-            <version>3.0.5</version>
+            <version>${spring-cloud.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.playtika.testcontainers</groupId>
             <artifactId>embedded-mysql</artifactId>
-            <version>2.3.2</version>
+            <version>${embedded-mysql.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- 容器化测试必备组件 => 结束 -->
-        <!--  mybatis-flex => 开始    -->
+        <!-- mybatis-flex => 开始    -->
         <dependency>
             <groupId>com.mybatis-flex</groupId>
             <artifactId>mybatis-flex-spring-boot-starter</artifactId>
@@ -75,11 +79,13 @@
             <version>${mybatis-flex.version}</version>
             <scope>provided</scope>
         </dependency>
-        <!--  mybatis-flex => 结束    -->
+        <!-- mybatis-flex => 结束    -->
+        <!-- 连接池 => 开始 -->
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
         </dependency>
+        <!-- 连接池 => 结束 -->
     </dependencies>
 
     <build>
@@ -89,13 +95,13 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>com.mybatis-flex</groupId>
                             <artifactId>mybatis-flex-processor</artifactId>
-                            <version>1.5.6</version>
+                            <version>${mybatis-flex.version}</version>
                         </path>
                         <path>
                             <groupId>org.projectlombok</groupId>
