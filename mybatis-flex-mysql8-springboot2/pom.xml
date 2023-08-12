@@ -18,7 +18,7 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <mybatis-flex.version>1.5.6</mybatis-flex.version>
+        <mybatis-flex.version>1.5.7</mybatis-flex.version>
     </properties>
     <dependencies>
         <dependency>
@@ -147,7 +147,7 @@
 
     <profiles>
         <profile>
-            <id>dev</id>
+            <id>aliyun</id>
             <repositories>
                 <repository>
                     <id>aliyun</id>
@@ -193,7 +193,7 @@
                         <enabled>true</enabled>
                     </releases>
                     <snapshots>
-                        <enabled>false</enabled>
+                        <enabled>true</enabled>
                     </snapshots>
                 </repository>
             </repositories>
@@ -206,13 +206,70 @@
                         <enabled>true</enabled>
                     </releases>
                     <snapshots>
-                        <enabled>false</enabled>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+        <profile>
+            <id>tencent</id>
+            <repositories>
+                <repository>
+                    <id>tencent</id>
+                    <name>Tencent Central Repository</name>
+                    <url>https://mirrors.cloud.tencent.com/nexus/repository/maven-public/</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>tencent</id>
+                    <name>Tencent Central Repository</name>
+                    <url>https://mirrors.cloud.tencent.com/nexus/repository/maven-public/</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+        <profile>
+            <id>huawei</id>
+            <repositories>
+                <repository>
+                    <id>huawei</id>
+                    <name>Huawei Central Repository</name>
+                    <url>https://mirrors.huaweicloud.com/repository/maven/</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>huawei</id>
+                    <name>Huawei Central Repository</name>
+                    <url>https://mirrors.huaweicloud.com/repository/maven/</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
                     </snapshots>
                 </pluginRepository>
             </pluginRepositories>
         </profile>
     </profiles>
-
 
 
 </project>
