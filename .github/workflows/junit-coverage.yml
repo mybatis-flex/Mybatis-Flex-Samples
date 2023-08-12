@@ -151,3 +151,25 @@ jobs:
         with:
           files: |
             TEST-*.xml
+  
+  merge: # 合并单元测试
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ needs.build.result == 'success' }}
+    steps:
+      - name: "拉取代码"
+        uses: actions/checkout@v3
+      - name: "合并到主分支"
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const github = context.github;
+            github.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: 'master',
+              head: context.sha,
+              title: 'Automated merge',
+              body: 'PR自动被合并',
+            });
