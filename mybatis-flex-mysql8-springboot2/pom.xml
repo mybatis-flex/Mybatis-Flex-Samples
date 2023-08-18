@@ -17,8 +17,12 @@
     <description>mybatis-flex-mysql8-springboot2</description>
 
     <properties>
-        <java.version>1.8</java.version>
-        <mybatis-flex.version>1.5.6</mybatis-flex.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <java.version>17</java.version>
+        <mybatis-flex.version>1.5.7</mybatis-flex.version>
+        <spring-cloud.version>3.0.5</spring-cloud.version>
+        <embedded-mysql.version>2.3.2</embedded-mysql.version>
     </properties>
     <dependencies>
         <dependency>
@@ -40,6 +44,10 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
         <!-- 容器化测试必备组件 => 开始 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -49,17 +57,17 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-bootstrap</artifactId>
-            <version>3.0.5</version>
+            <version>${spring-cloud.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.playtika.testcontainers</groupId>
             <artifactId>embedded-mysql</artifactId>
-            <version>2.3.2</version>
+            <version>${embedded-mysql.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- 容器化测试必备组件 => 结束 -->
-        <!--  mybatis-flex => 开始    -->
+        <!-- mybatis-flex => 开始    -->
         <dependency>
             <groupId>com.mybatis-flex</groupId>
             <artifactId>mybatis-flex-spring-boot-starter</artifactId>
@@ -71,11 +79,13 @@
             <version>${mybatis-flex.version}</version>
             <scope>provided</scope>
         </dependency>
-        <!--  mybatis-flex => 结束    -->
+        <!-- mybatis-flex => 结束    -->
+        <!-- 连接池 => 开始 -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
         </dependency>
+        <!-- 连接池 => 结束 -->
     </dependencies>
 
     <build>
@@ -85,11 +95,13 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>com.mybatis-flex</groupId>
                             <artifactId>mybatis-flex-processor</artifactId>
-                            <version>1.5.6</version>
+                            <version>${mybatis-flex.version}</version>
                         </path>
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -139,35 +151,131 @@
         </plugins>
     </build>
 
-    <!-- 为了加速下载需要在 pom 文件中复制如下 -->
-    <repositories>
-        <repository>
+    <profiles>
+        <profile>
             <id>aliyun</id>
-            <name>Nexus Snapshot Repository</name>
-            <url>https://maven.aliyun.com/repository/public</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <!-- snapshots 默认是关闭的,需要开启  -->
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>aliyun</id>
-            <name>Nexus Snapshot Repository</name>
-            <url>https://maven.aliyun.com/repository/public</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
+            <repositories>
+                <repository>
+                    <id>aliyun</id>
+                    <name>Nexus Snapshot Repository</name>
+                    <url>https://maven.aliyun.com/repository/public</url>
+                    <layout>default</layout>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <!-- snapshots 默认是关闭的,需要开启  -->
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>aliyun</id>
+                    <name>Nexus Snapshot Repository</name>
+                    <url>https://maven.aliyun.com/repository/public</url>
+                    <layout>default</layout>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+            <!-- 设置默认启动 -->
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>github</id>
+            <repositories>
+                <repository>
+                    <id>central</id>
+                    <name>Maven Central Repository</name>
+                    <url>https://repo.maven.apache.org/maven2</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>central</id>
+                    <name>Maven Central Repository</name>
+                    <url>https://repo.maven.apache.org/maven2</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+        <profile>
+            <id>tencent</id>
+            <repositories>
+                <repository>
+                    <id>tencent</id>
+                    <name>Tencent Central Repository</name>
+                    <url>https://mirrors.cloud.tencent.com/nexus/repository/maven-public/</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>tencent</id>
+                    <name>Tencent Central Repository</name>
+                    <url>https://mirrors.cloud.tencent.com/nexus/repository/maven-public/</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+        <profile>
+            <id>huawei</id>
+            <repositories>
+                <repository>
+                    <id>huawei</id>
+                    <name>Huawei Central Repository</name>
+                    <url>https://mirrors.huaweicloud.com/repository/maven/</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>huawei</id>
+                    <name>Huawei Central Repository</name>
+                    <url>https://mirrors.huaweicloud.com/repository/maven/</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+    </profiles>
+
 
 </project>
